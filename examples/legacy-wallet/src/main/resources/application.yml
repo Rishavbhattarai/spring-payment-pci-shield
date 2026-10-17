@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: legacy-wallet
+  jpa:
+    open-in-view: false
+psp:
+  base-url: https://psp.example.com
+logging:
+  level:
+    root: INFO
+    com.example.wallet: INFO
