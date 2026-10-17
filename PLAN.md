@@ -32,7 +32,9 @@ The official marketplace has general SAST plugins (42crunch, aikido) but nothing
 - [x] Logback `PanMaskingConverter` (Luhn-checked) + LOG001 hook rule for `logback*.xml`
 - [x] Eval harness `eval/run_eval.sh` + `eval/score.py`
 - [x] **Eval v1 result (Sonnet, 3+3 runs): no difference.** Both conditions 0 errors, 3/3 compile, 3/3 idempotent, ~$0.30/run. See `eval/results/latest.md`. The sample app already shows the right patterns (last4 only, PanMasker, BigDecimal), so the agent copies them. The hook never has to fire.
-- [ ] **Eval v2: make it discriminating.** Options: (a) greenfield task, "build a card payment service from scratch", with no patterns to copy; (b) a messy legacy fixture app (Lombok `@Data` DTOs holding raw PAN, `double` amounts) with "add refunds"; (c) a weaker/faster model (Haiku), where the 2026-10-16 live check already showed the hook firing. Run 5+ per condition.
+- [x] **Eval v2 (2026-10-17):** `examples/legacy-wallet` + `eval/task-legacy.md`. Baseline introduced PSP wire logging (CFG003) in 4/11 runs; plugin 0/11. Java code was PCI-safe in both conditions (checked by hand; no scanner false negatives). No run added idempotency unprompted, so I added the **IDM001** warning: 3/3 plugin runs then surfaced the double-charge risk to the user, vs 0/8 baseline. See `eval/results/SUMMARY.md`.
+- [ ] Bigger sample (10+ per condition) before quoting numbers publicly
+- [ ] Skill triggering: the idempotent-endpoint-scaffold skill never fired on "add checkout". Try a sharper description, or have IDM001's hint name the skill more directly, and measure.
 - [ ] Run the ITs once Docker Desktop is unpaused
 
 ### Phase 3: MCP verification server (`.mcp.json`)
@@ -50,4 +52,4 @@ The official marketplace has general SAST plugins (42crunch, aikido) but nothing
 
 ## Next step
 
-Eval v2 (see Phase 2): a harder task where the baseline actually fails, so the README has a real before/after number. Then Phase 3.
+Phase 3 (Testcontainers MCP server), or first the Phase 2 leftovers: bigger eval sample and skill triggering. Docker Desktop must be unpaused for the ITs and for Phase 3.

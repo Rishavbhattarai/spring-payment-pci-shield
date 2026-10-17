@@ -36,6 +36,7 @@ A Claude Code plugin for teams building Java / Spring Boot payment services. Gen
 | CFG005 | warn | root logger at DEBUG/TRACE |
 | CFG006 | warn | `server.error.include-stacktrace: always` |
 | LOG001 | warn | `logback*.xml` printing `%msg` (or a JSON encoder) with no masking converter configured |
+| IDM001 | warn | `@PostMapping` in a payment/checkout/refund/... controller with no `Idempotency-Key` |
 
 Suppress a false positive on the same or previous line, with a reason:
 
@@ -72,7 +73,11 @@ python3 scripts/pci_shield.py src/            # exit 1 if any errors (CI-friendl
 cd examples/payment-service && mvn verify    # ITs need Docker; they skip without it
 ```
 
-`eval/run_eval.sh [runs] [model]` gives the same refund-feature task (`eval/task.md`) to Claude with and without the plugin, on fresh copies of the sample app, and writes a scored table to `eval/results/latest.md`. The score covers pci-shield errors in changed files, whether it compiles, and whether an idempotency key was added.
+`examples/legacy-wallet` is a Lombok-style service with no card-handling patterns to copy. It's the harder eval target.
+
+`eval/run_eval.sh [runs] [model] [app] [task]` gives the same task to Claude with and without the plugin, on fresh copies of a sample app, and writes a scored table to `eval/results/<app>-<model>.md`. The score covers pci-shield errors the agent introduced, whether it compiles, and whether an idempotency key was added.
+
+**Results so far** (`eval/results/SUMMARY.md`): on the guest-checkout task, Sonnet and Haiku without the plugin enabled PSP HTTP wire logging (which writes PAN/CVV to logs) in 4 of 11 runs. With the plugin: 0 of 11. With IDM001, every plugin run told the user about the double-charge risk on the new endpoint; no baseline run did. The Java code itself was PCI-safe in both conditions, since current models already handle masking and BigDecimal well.
 
 ## Development
 
