@@ -23,6 +23,7 @@ Rules (error blocks the agent, warn is passed back as context):
   CFG005 warn   root logger at DEBUG/TRACE
   CFG006 warn   server.error.include-stacktrace=always
   LOG001 warn   logback config prints the raw message with no masking converter
+  IDM001 warn   money-moving @PostMapping in a controller with no Idempotency-Key
 
 Suppress a finding with a comment on the same or previous line:
   // pci-shield:ignore MON001 -- reason
@@ -73,6 +74,8 @@ HINTS = {
     "CFG006": "Stack traces in error responses leak internals. Use on_param or never.",
     "LOG001": "Add a masking safety net: a <conversionRule> with a PAN-masking MessageConverter used instead "
               "of %msg, or a MaskingJsonGeneratorDecorator for JSON encoders.",
+    "IDM001": "A retried request (client timeout, mobile retry, proxy) would charge twice. Require an "
+              "Idempotency-Key header; use the idempotent-endpoint-scaffold skill for the full pattern.",
 }
 
 # ---------------------------------------------------------------------------
@@ -413,6 +416,18 @@ def check_money(code, add):
             add("MON006", "warn", line_of(code, m.start()), f"`{m.group(1)}` converted with {m.group(2)}()")
 
 
+_MONEY_ENDPOINT = re.compile(r"(?i)payment|checkout|charge|refund|transfer|payout|top-?up|capture|withdraw")
+
+
+def check_idempotency(raw, code, add):
+    if not re.search(r"@(?:Rest)?Controller\b", code) or re.search(r"(?i)idempoten", raw):
+        return
+    if not _MONEY_ENDPOINT.search(raw):
+        return
+    for m in re.finditer(r"@PostMapping\b", code):
+        add("IDM001", "warn", line_of(code, m.start()), "money-moving POST endpoint without an Idempotency-Key")
+
+
 def scan_java(path, raw):
     code = blank_code(raw)
     findings = []
@@ -424,6 +439,7 @@ def scan_java(path, raw):
     check_tostring_leaks(raw, code, add)
     check_request_logging(code, add)
     check_money(code, add)
+    check_idempotency(raw, code, add)
     return findings
 
 
