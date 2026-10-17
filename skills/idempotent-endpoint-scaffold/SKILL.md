@@ -143,6 +143,15 @@ Use Testcontainers (`@Testcontainers`, `PostgreSQLContainer`, plus `KafkaContain
 5. **Rollback:** force an exception after the state change in TX2. No outbox row and no `COMPLETED` key remain.
 6. **Consumer idempotency:** deliver the same event twice. One side effect.
 
+## 8. Verify with the pci-shield-verify MCP tools
+
+If the `pci-shield-verify` MCP server is available, prove the behaviour instead of asserting it:
+
+1. `docker_status`: if Docker isn't available, say so. Testcontainers ITs will be **skipped**, and a skipped test is not a pass.
+2. `run_integration_tests(project_dir, "PaymentApiIT")` (or your IT class): runs the Testcontainers tests above and returns parsed results.
+3. With the app running locally (`mvn spring-boot:run` against a local Postgres), use `concurrency_probe(url, body, headers={"Idempotency-Key": "probe-1"}, concurrency=10)`. It must return `SINGLE_RESOURCE`. `DUPLICATES_CREATED` means the claim isn't atomic. Only point it at local or test environments.
+4. If the service publishes an OpenAPI spec, use `openapi_idempotency_check(spec_path_or_url)`: every money-moving POST/PATCH must declare the header.
+
 ## Output checklist
 
 When you finish, tell the user which of these you did and which you skipped, and why:
@@ -153,4 +162,5 @@ When you finish, tell the user which of these you did and which you skipped, and
 - [ ] Outbox written in the same transaction as the state change; consumers dedupe
 - [ ] Retry only transient errors; DLT has no PAN/CVV
 - [ ] Money uses BigDecimal/minor units with explicit RoundingMode
-- [ ] The six Testcontainers tests above
+- [ ] The six Testcontainers tests above, actually run (not skipped)
+- [ ] `concurrency_probe` returned `SINGLE_RESOURCE` (or say why it couldn't run)

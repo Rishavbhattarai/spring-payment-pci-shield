@@ -1,0 +1,28 @@
+{
+  "openapi": "3.0.3",
+  "info": {"title": "payments", "version": "1"},
+  "paths": {
+    "/payments": {
+      "post": {"operationId": "createPayment", "responses": {"201": {"description": "created"}}}
+    },
+    "/payments/{id}/refunds": {
+      "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+      "post": {"operationId": "refund", "responses": {"201": {"description": "created"}}}
+    },
+    "/checkout": {
+      "post": {
+        "operationId": "checkout",
+        "parameters": [{"in": "header", "name": "idempotency-key", "required": true, "schema": {"type": "string"}}],
+        "responses": {"200": {"description": "ok"}}
+      }
+    },
+    "/users": {
+      "post": {"operationId": "createUser", "responses": {"201": {"description": "created"}}}
+    }
+  },
+  "components": {
+    "parameters": {
+      "IdempotencyKey": {"in": "header", "name": "Idempotency-Key", "required": true, "schema": {"type": "string"}}
+    }
+  }
+}

@@ -15,6 +15,7 @@ A Claude Code plugin for teams building Java / Spring Boot payment services. Gen
 | Skill | `skills/idempotent-endpoint-scaffold` | Idempotency-key contract, DB-constraint locking, `@Transactional` boundaries, outbox, DLQ retry, and the Testcontainers tests to prove it. |
 | Skill | `skills/jpa-n-plus-one-hunter` | Inventory → trace → fix → prove (statement-count assertions) for Hibernate/Spring Data N+1s. |
 | Command | `/pci-scan [path...]` | Run the scanner over a whole repo and walk through fixes. |
+| MCP | `.mcp.json` → `mcp/server.py` (`pci-shield-verify`) | Runtime checks: `concurrency_probe` (N identical requests at once; did it create one resource?), `run_integration_tests` (Maven/Gradle Testcontainers ITs, parsed, flags Docker-skipped tests), `openapi_idempotency_check`, `docker_status`. |
 
 ## Rules
 
@@ -57,7 +58,7 @@ claude --plugin-dir /path/to/spring-payment-pci-shield
 /plugin install spring-payment-pci-shield@spring-payment-pci-shield
 ```
 
-Requires `python3` (3.8+) on PATH. The scanner uses only the standard library.
+Requires `python3` (3.8+) on PATH. The scanner uses only the standard library. The MCP server needs [`uv`](https://docs.astral.sh/uv/), which fetches its two dependencies (`mcp`, `pyyaml`) on first start. Docker is needed only for Testcontainers runs.
 
 ## Use the scanner without Claude
 
@@ -83,6 +84,7 @@ cd examples/payment-service && mvn verify    # ITs need Docker; they skip withou
 
 ```bash
 python3 -m unittest discover -s tests
+PCI_SHIELD_SLOW_TESTS=1 python3 -m unittest discover -s tests   # also runs Maven against the sample app
 ```
 
 `tests/fixtures/bad/*` mark every expected finding with `// expect: RULE` on that line. The test asserts the exact (line, rule) set. `tests/fixtures/good/*` must scan clean, which guards against false positives.

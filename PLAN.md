@@ -37,13 +37,17 @@ The official marketplace has general SAST plugins (42crunch, aikido) but nothing
 - [ ] Skill triggering: the idempotent-endpoint-scaffold skill never fired on "add checkout". Try a sharper description, or have IDM001's hint name the skill more directly, and measure.
 - [ ] Run the ITs once Docker Desktop is unpaused
 
-### Phase 3: MCP verification server (`.mcp.json`)
-- [ ] Small MCP server (Java/Kotlin with Testcontainers, or Python + `testcontainers-python`) exposing tools:
-  - `start_stack(postgres|redis|kafka)` → JDBC/Redis URLs for the test run
-  - `run_idempotency_probe(endpoint, payload, concurrency, inject_timeout_ms)` → counts of PSP calls, payment rows and outbox rows
-  - `verify_rollback(test_class)` → runs the targeted tests, returns the DB state after a forced failure
-  - `openapi_check(spec_url)` → every money-moving POST declares an `Idempotency-Key` header
-- [ ] Requires Docker; the plugin must degrade gracefully (skills still work, MCP tools report "Docker not available")
+### Phase 3: MCP verification server (built 2026-10-17)
+Design change from the original sketch: rather than the MCP server managing containers itself, it drives the project's **own** Testcontainers tests (which teams already write, and which the skill tells the agent to write) and probes the running service over HTTP. That means fewer moving parts and no second container stack.
+- [x] `mcp/server.py` (FastMCP, `uv run --script` with inline deps) + `mcp/verify_tools.py` (stdlib logic, unit-tested)
+  - `docker_status`
+  - `openapi_idempotency_check(spec)`: JSON/YAML, file or URL, resolves `$ref` params
+  - `concurrency_probe(url, body, headers, concurrency)`: barrier-synchronised identical requests → `SINGLE_RESOURCE` / `DUPLICATES_CREATED`
+  - `run_integration_tests(project_dir, pattern)`: Maven/Gradle, parsed JUnit XML, flags Docker-skipped ITs as "not a pass"
+- [x] Verified: unit tests (including a real Maven run on the sample app), stdio JSON-RPC smoke test, and a live `claude -p --plugin-dir` session calling the tools
+- [x] Degrades without Docker: tools still run, and Docker-skipped ITs are reported as such
+- [ ] **Needs Docker unpaused:** run `PaymentApiIT` for real, and `concurrency_probe` against the running sample app (expect `DUPLICATES_CREATED` on the naive baseline). That's the demo for the README.
+- [ ] Optional: a `timeout` fault-injection mode (WireMock delay on the PSP) for the "unknown outcome" case
 
 ### Phase 4: ship
 - [ ] Public GitHub repo, MIT license, CI running the unit tests
@@ -52,4 +56,4 @@ The official marketplace has general SAST plugins (42crunch, aikido) but nothing
 
 ## Next step
 
-Phase 3 (Testcontainers MCP server), or first the Phase 2 leftovers: bigger eval sample and skill triggering. Docker Desktop must be unpaused for the ITs and for Phase 3.
+Unpause Docker Desktop, then run the Phase 3 demo (`PaymentApiIT` plus `concurrency_probe` on the naive sample app). After that, Phase 4: GitHub repo + CI, then marketplace submission. Phase 2 leftovers (bigger eval sample, skill triggering) can run in parallel.
