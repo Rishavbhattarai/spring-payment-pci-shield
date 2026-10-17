@@ -27,10 +27,13 @@ The official marketplace has general SAST plugins (42crunch, aikido) but nothing
 - [x] `/pci-scan` command
 - [x] Tests: exact-line fixtures (bad), clean fixtures (good), hook and CLI end to end
 
-### Phase 2: sample app and eval
-- [ ] `examples/payment-service/`: small Spring Boot 3 app (Postgres, Kafka optional) with a deliberately naive `POST /payments`
-- [ ] Eval script: ask Claude (with and without the plugin) to "add a refund endpoint", then score with the scanner and the idempotency tests. This is the before/after number for the README and the marketplace listing.
-- [ ] Logback masking: ship a `MaskingPatternLayout`/`MessageConverter` snippet, and have the hook check `logback-spring.xml` for it
+### Phase 2: sample app and eval (v1 done 2026-10-17)
+- [x] `examples/payment-service/`: Spring Boot 3.5.7 app (Postgres, Flyway, Testcontainers ITs that skip without Docker), deliberately naive `POST /payments`. Builds on JDK 25, targets Java 21.
+- [x] Logback `PanMaskingConverter` (Luhn-checked) + LOG001 hook rule for `logback*.xml`
+- [x] Eval harness `eval/run_eval.sh` + `eval/score.py`
+- [x] **Eval v1 result (Sonnet, 3+3 runs): no difference.** Both conditions 0 errors, 3/3 compile, 3/3 idempotent, ~$0.30/run. See `eval/results/latest.md`. The sample app already shows the right patterns (last4 only, PanMasker, BigDecimal), so the agent copies them. The hook never has to fire.
+- [ ] **Eval v2: make it discriminating.** Options: (a) greenfield task, "build a card payment service from scratch", with no patterns to copy; (b) a messy legacy fixture app (Lombok `@Data` DTOs holding raw PAN, `double` amounts) with "add refunds"; (c) a weaker/faster model (Haiku), where the 2026-10-16 live check already showed the hook firing. Run 5+ per condition.
+- [ ] Run the ITs once Docker Desktop is unpaused
 
 ### Phase 3: MCP verification server (`.mcp.json`)
 - [ ] Small MCP server (Java/Kotlin with Testcontainers, or Python + `testcontainers-python`) exposing tools:
@@ -47,4 +50,4 @@ The official marketplace has general SAST plugins (42crunch, aikido) but nothing
 
 ## Next step
 
-Start Phase 2: scaffold `examples/payment-service` with a naive payments endpoint, then run Claude against it with `--plugin-dir` to capture the before/after.
+Eval v2 (see Phase 2): a harder task where the baseline actually fails, so the README has a real before/after number. Then Phase 3.

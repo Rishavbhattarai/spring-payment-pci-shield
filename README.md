@@ -35,6 +35,7 @@ A Claude Code plugin for teams building Java / Spring Boot payment services. Gen
 | CFG004 | error | `spring.mvc.log-request-details` / `spring.codec.log-request-details` |
 | CFG005 | warn | root logger at DEBUG/TRACE |
 | CFG006 | warn | `server.error.include-stacktrace: always` |
+| LOG001 | warn | `logback*.xml` printing `%msg` (or a JSON encoder) with no masking converter configured |
 
 Suppress a false positive on the same or previous line, with a reason:
 
@@ -62,6 +63,16 @@ Requires `python3` (3.8+) on PATH. The scanner uses only the standard library.
 ```bash
 python3 scripts/pci_shield.py src/            # exit 1 if any errors (CI-friendly)
 ```
+
+## Sample app and eval
+
+`examples/payment-service` is a small Spring Boot 3.5 service (Postgres, Flyway, Testcontainers). It is naive on purpose: no idempotency key, and the DB transaction stays open across the gateway call. It also shows the runtime safety net the hook can't replace: `PanMaskingConverter`, a Logback converter that masks Luhn-valid PANs in every message.
+
+```bash
+cd examples/payment-service && mvn verify    # ITs need Docker; they skip without it
+```
+
+`eval/run_eval.sh [runs] [model]` gives the same refund-feature task (`eval/task.md`) to Claude with and without the plugin, on fresh copies of the sample app, and writes a scored table to `eval/results/latest.md`. The score covers pci-shield errors in changed files, whether it compiles, and whether an idempotency key was added.
 
 ## Development
 
