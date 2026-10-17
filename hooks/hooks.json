@@ -1,0 +1,17 @@
+{
+  "description": "Scan .java and application*.yml/.properties files after every write/edit for PCI data leaks and unsafe money handling.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/pci_shield.py\" --hook",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

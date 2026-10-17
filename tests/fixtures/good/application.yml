@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payments
+  jpa:
+    show-sql: false
+    open-in-view: false
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    com.example.payments: DEBUG
+server:
+  error:
+    include-stacktrace: never

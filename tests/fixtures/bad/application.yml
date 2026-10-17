@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    show-sql: true                                  # expect: CFG001
+  mvc:
+    log-request-details: true                       # expect: CFG004
+  cloud:
+    openfeign:
+      client:
+        config:
+          psp-gateway:
+            logger-level: FULL                      # expect: CFG003
+server:
+  error:
+    include-stacktrace: always                      # expect: CFG006
+logging:
+  level:
+    root: DEBUG                                     # expect: CFG005
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE              # expect: CFG002
+    org.apache.hc.client5.http.wire: DEBUG          # expect: CFG003
+    org.springframework.web: DEBUG                  # expect: CFG003

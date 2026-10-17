@@ -1,0 +1,18 @@
+{
+  "name": "spring-payment-pci-shield",
+  "owner": {
+    "name": "Rishav Bhattarai",
+    "email": "bhattarai.rishav@gmail.com"
+  },
+  "metadata": {
+    "description": "Stack-specific guardrails for Java/Spring Boot payment microservices."
+  },
+  "plugins": [
+    {
+      "name": "spring-payment-pci-shield",
+      "source": "./",
+      "description": "Guardrails for Java/Spring Boot payment services: PCI-safe logging, BigDecimal money rules, idempotent endpoint and JPA N+1 skills.",
+      "category": "security"
+    }
+  ]
+}
