@@ -22,6 +22,7 @@ Rules (error blocks the agent, warn is passed back as context):
   CFG004 error  spring.mvc/codec log-request-details enabled
   CFG005 warn   root logger at DEBUG/TRACE
   CFG006 warn   server.error.include-stacktrace=always
+  LOG001 warn   logback config prints the raw message with no masking converter
 
 Suppress a finding with a comment on the same or previous line:
   // pci-shield:ignore MON001 -- reason
@@ -70,6 +71,8 @@ HINTS = {
     "CFG004": "log-request-details logs request parameters and headers, including card data and auth headers.",
     "CFG005": "Root DEBUG/TRACE turns on body/parameter logging in many libraries at once.",
     "CFG006": "Stack traces in error responses leak internals. Use on_param or never.",
+    "LOG001": "Add a masking safety net: a <conversionRule> with a PAN-masking MessageConverter used instead "
+              "of %msg, or a MaskingJsonGeneratorDecorator for JSON encoders.",
 }
 
 # ---------------------------------------------------------------------------
@@ -504,6 +507,17 @@ def scan_config(path, raw):
 # ---------------------------------------------------------------------------
 # Driver
 
+def scan_logback(path, raw):
+    if re.search(r"(?i)mask", raw):
+        return []
+    findings = []
+    for no, line in enumerate(raw.splitlines(), 1):
+        if re.search(r"%(?:m|msg|message)\b", line) or re.search(r"LogstashEncoder|JsonEncoder", line):
+            findings.append(Finding("LOG001", "warn", path, no, "log message written without PAN masking"))
+    return findings
+
+
+LOGBACK_NAME = re.compile(r"^logback(?:-[\w.-]+)?\.xml$")
 CONFIG_NAME = re.compile(r"^(?:application|bootstrap)(?:[-.][\w.-]+)?\.(?:ya?ml|properties)$")
 _IGNORE = re.compile(r"pci-shield:ignore\b([\s:,]*(?:[A-Z]{3}\d{3}[\s,]*)*)")
 SKIP_DIRS = {".git", "target", "build", "out", "node_modules", ".gradle", ".idea", ".mvn"}
@@ -511,7 +525,7 @@ SKIP_DIRS = {".git", "target", "build", "out", "node_modules", ".gradle", ".idea
 
 def applies_to(path):
     base = os.path.basename(path)
-    return base.endswith(".java") or bool(CONFIG_NAME.match(base))
+    return base.endswith(".java") or bool(CONFIG_NAME.match(base) or LOGBACK_NAME.match(base))
 
 
 def suppressed(lines, f):
@@ -533,7 +547,12 @@ def scan_file(path):
             raw = fh.read()
     except OSError:
         return []
-    findings = scan_java(path, raw) if path.endswith(".java") else scan_config(path, raw)
+    if path.endswith(".java"):
+        findings = scan_java(path, raw)
+    elif LOGBACK_NAME.match(os.path.basename(path)):
+        findings = scan_logback(path, raw)
+    else:
+        findings = scan_config(path, raw)
     lines = raw.splitlines()
     seen, out = set(), []
     for f in sorted(findings, key=lambda f: (f.line, f.rule)):

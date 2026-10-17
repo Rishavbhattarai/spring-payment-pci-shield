@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payments
+    username: payments
+    password: payments
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+logging:
+  level:
+    root: INFO
