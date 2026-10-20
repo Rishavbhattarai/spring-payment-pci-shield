@@ -3,8 +3,8 @@ spring:
     name: payment-service
   datasource:
     url: jdbc:postgresql://localhost:5432/payments
-    username: payments
-    password: payments
+    username: ${DB_USERNAME:payments}
+    password: ${DB_PASSWORD}
   jpa:
     open-in-view: false
     hibernate:
