@@ -31,7 +31,8 @@ jobs:
 
       - name: Check the hook scanner is stdlib-only and makes no network calls
         run: |
-          if grep -nE '^\s*(import|from)\s+(requests|urllib3|httpx|aiohttp)\b|urllib\.request|socket\.|http\.client' scripts/pci_shield.py; then
+          # Match import lines only: the scanner contains logger names such as "reactor.netty.http.client" as plain strings.
+          if grep -nE '^\s*(import|from)\s+(requests|urllib3|httpx|aiohttp|socket|http|urllib)\b' scripts/pci_shield.py; then
             echo "Network or third-party import found in scripts/pci_shield.py" >&2
             exit 1
           fi
