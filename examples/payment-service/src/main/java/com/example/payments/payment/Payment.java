@@ -9,6 +9,8 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "payment")
@@ -21,6 +23,7 @@ public class Payment {
     private BigDecimal amount;
 
     @Column(nullable = false, length = 3)
+    @JdbcTypeCode(SqlTypes.CHAR) // V1 migration: char(3)
     private String currency;
 
     @Enumerated(EnumType.STRING)
@@ -28,6 +31,7 @@ public class Payment {
     private PaymentStatus status;
 
     @Column(name = "pan_last4", nullable = false, length = 4)
+    @JdbcTypeCode(SqlTypes.CHAR) // V1 migration: char(4)
     private String panLast4;
 
     @Column(name = "gateway_ref", length = 64)
