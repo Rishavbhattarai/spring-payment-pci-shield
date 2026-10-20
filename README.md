@@ -103,6 +103,8 @@ python3 scripts/pci_shield.py src/            # exit 1 if any errors (CI-friendl
 cd examples/payment-service && mvn verify    # ITs need Docker; they skip without it
 ```
 
+`eval/results/phase3-demo.md` records a live run of the MCP tools against this app. Ten identical charge requests sent at once created ten payments, with or without an `Idempotency-Key`, and `concurrency_probe` reported `DUPLICATES_CREATED`. On Docker Engine 29, Testcontainers needs 1.21.4 or later, which the sample pins.
+
 `examples/legacy-wallet` is a Lombok-style service with no card-handling patterns to copy. It's the harder eval target.
 
 `eval/run_eval.sh [runs] [model] [app] [task]` gives the same task to Claude with and without the plugin, on fresh copies of a sample app, and writes a scored table to `eval/results/<app>-<model>.md`. The score covers pci-shield errors the agent introduced, whether it compiles, and whether an idempotency key was added.

@@ -11,3 +11,5 @@ First release.
 - Skills: `idempotent-endpoint-scaffold` and `jpa-n-plus-one-hunter`.
 - `pci-shield-verify` MCP server with `docker_status`, `openapi_idempotency_check`, `concurrency_probe` and `run_integration_tests`. Dependencies are pinned in `mcp/server.py.lock`.
 - Sample apps `examples/payment-service` and `examples/legacy-wallet`, and a with/without-plugin eval in `eval/`.
+- `run_integration_tests` reports `ok: false` when every test was skipped.
+- The payment-service sample runs on Docker Engine 29 (Testcontainers 1.21.4) and maps its `char` columns correctly.
