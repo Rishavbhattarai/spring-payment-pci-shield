@@ -1,5 +1,5 @@
 {
-  "description": "Scan .java and application*.yml/.properties files after every write/edit for PCI data leaks and unsafe money handling.",
+  "description": "After each write or edit of a .java, application* config or logback*.xml file, scan it for PCI data leaks and unsafe money handling. Errors are sent back to Claude to fix. Reads only that file; no network.",
   "hooks": {
     "PostToolUse": [
       {

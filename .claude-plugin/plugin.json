@@ -1,11 +1,26 @@
 {
   "name": "spring-payment-pci-shield",
-  "version": "0.1.0",
-  "description": "Guardrails for Java/Spring Boot payment services: blocks PAN/CVV in logs and toString(), floating-point money and unsafe BigDecimal rounding, plus skills for idempotent payment endpoints and JPA N+1 hunting.",
+  "displayName": "PCI Shield for Spring payment services",
+  "version": "1.0.0",
+  "description": "Guardrails for Java/Spring Boot payment services. Flags PAN/CVV in logs and toString(), floating-point money and unsafe BigDecimal rounding right after Claude writes them, and adds skills for idempotent payment endpoints and JPA N+1 hunting. Community-built; not affiliated with Spring or the PCI Security Standards Council.",
   "author": {
     "name": "Rishav Bhattarai",
-    "email": "bhattarai.rishav@gmail.com"
+    "url": "https://github.com/Rishavbhattarai"
   },
+  "homepage": "https://github.com/Rishavbhattarai/spring-payment-pci-shield#readme",
+  "repository": "https://github.com/Rishavbhattarai/spring-payment-pci-shield",
+  "documentationUrl": "https://github.com/Rishavbhattarai/spring-payment-pci-shield#readme",
+  "supportUrl": "https://github.com/Rishavbhattarai/spring-payment-pci-shield/issues",
   "license": "MIT",
-  "keywords": ["java", "spring-boot", "payments", "pci-dss", "idempotency", "bigdecimal", "jpa", "hibernate", "security"]
+  "keywords": [
+    "java",
+    "spring-boot",
+    "payments",
+    "pci-dss",
+    "idempotency",
+    "bigdecimal",
+    "jpa",
+    "hibernate",
+    "security"
+  ]
 }
