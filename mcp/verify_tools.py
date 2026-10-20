@@ -185,9 +185,9 @@ def _parse_junit_reports(patterns):
 def run_integration_tests(project_dir, test_pattern=None, java_home=None, timeout_s=900):
     """Run the project's tests (Maven or Gradle) and return parsed JUnit results."""
     project_dir = os.path.abspath(project_dir)
-    env = dict(os.environ)
+    env = None  # inherit the user's environment, as running mvn in a terminal would
     if java_home:
-        env["JAVA_HOME"] = java_home
+        env = {**os.environ, "JAVA_HOME": java_home}
     if os.path.exists(os.path.join(project_dir, "pom.xml")):
         mvn = "./mvnw" if os.path.exists(os.path.join(project_dir, "mvnw")) else "mvn"
         cmd = [mvn, "-B", "verify"]

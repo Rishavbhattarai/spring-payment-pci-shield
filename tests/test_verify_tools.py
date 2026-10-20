@@ -19,6 +19,35 @@ SPEC = os.path.join(HERE, "fixtures", "openapi.json")
 JDK25 = "/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home"
 
 
+class IntegrationTestEnvTest(unittest.TestCase):
+    """run_integration_tests inherits the environment instead of passing a copy of it,
+    and builds a modified one only when JAVA_HOME is overridden."""
+
+    def _captured_env(self, **kwargs):
+        seen = {}
+        def fake_run(cmd, **kw):
+            seen["env"] = kw.get("env", "unset")
+            class R: returncode, stdout, stderr = 0, "", ""
+            return R()
+        project = tempfile.mkdtemp()
+        open(os.path.join(project, "pom.xml"), "w").close()
+        original = verify_tools.subprocess.run
+        verify_tools.subprocess.run = fake_run
+        try:
+            verify_tools.run_integration_tests(project, **kwargs)
+        finally:
+            verify_tools.subprocess.run = original
+            shutil.rmtree(project, ignore_errors=True)
+        return seen["env"]
+
+    def test_inherits_environment_by_default(self):
+        self.assertIsNone(self._captured_env())
+
+    def test_java_home_override_sets_only_that_variable(self):
+        env = self._captured_env(java_home="/opt/jdk")
+        self.assertEqual(env["JAVA_HOME"], "/opt/jdk")
+        self.assertEqual(env.get("PATH"), os.environ.get("PATH"))
+
 class OpenApiTest(unittest.TestCase):
     def test_flags_money_posts_without_header(self):
         res = verify_tools.openapi_idempotency_check(SPEC)
