@@ -3,33 +3,35 @@
 # dependencies = ["mcp>=1.2,<2", "pyyaml>=6"]
 # ///
 """pci-shield-verify: MCP tools that check payment endpoints at runtime instead of by reading code.
-Started by the plugin's .mcp.json via `uv run --script`."""
+Started by the plugin's .mcp.json via `uv run --locked --script`, from the pinned versions in server.py.lock."""
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from mcp.server.fastmcp import FastMCP  # noqa: E402
+from mcp.types import ToolAnnotations  # noqa: E402
 
 import verify_tools  # noqa: E402
 
 mcp = FastMCP("pci-shield-verify")
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(title="Docker status", readOnlyHint=True, destructiveHint=False, openWorldHint=False))
 def docker_status() -> dict:
     """Check whether a Docker daemon is reachable. Testcontainers-based tests need it; without it they skip."""
     return verify_tools.docker_status()
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(title="OpenAPI idempotency check", readOnlyHint=True, destructiveHint=False, openWorldHint=True))
 def openapi_idempotency_check(spec: str) -> dict:
     """List money-moving POST/PATCH operations (payment, checkout, charge, refund, transfer, payout, ...)
     in an OpenAPI 3 spec (file path or http(s) URL, JSON or YAML) that don't declare an Idempotency-Key header."""
     return verify_tools.openapi_idempotency_check(spec)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(title="Concurrency probe", readOnlyHint=False, destructiveHint=True,
+                                      idempotentHint=False, openWorldHint=True))
 def concurrency_probe(url: str, body: str, method: str = "POST", headers: dict | None = None,
                       concurrency: int = 10, id_field: str = "id") -> dict:
     """Fire `concurrency` identical requests at the same instant against a RUNNING service and report how many
@@ -39,7 +41,8 @@ def concurrency_probe(url: str, body: str, method: str = "POST", headers: dict |
     return verify_tools.concurrency_probe(url, body, method, headers, max(1, min(concurrency, 100)), id_field)
 
 
-@mcp.tool()
+@mcp.tool(annotations=ToolAnnotations(title="Run integration tests", readOnlyHint=False, destructiveHint=False,
+                                      openWorldHint=True))
 def run_integration_tests(project_dir: str, test_pattern: str | None = None, java_home: str | None = None) -> dict:
     """Run the project's Maven/Gradle tests (optionally filtered, e.g. "PaymentApiIT") and return parsed JUnit
     results, including whether Docker was available. Use it to prove rollback and idempotency behaviour with
