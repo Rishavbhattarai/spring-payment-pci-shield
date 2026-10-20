@@ -48,6 +48,45 @@ class IntegrationTestEnvTest(unittest.TestCase):
         self.assertEqual(env["JAVA_HOME"], "/opt/jdk")
         self.assertEqual(env.get("PATH"), os.environ.get("PATH"))
 
+
+class IntegrationTestSkipTest(unittest.TestCase):
+    """A run where every test was skipped must not report ok, even when Docker is reachable."""
+
+    def _run(self, skipped, docker_up):
+        project = tempfile.mkdtemp()
+        open(os.path.join(project, "pom.xml"), "w").close()
+        report_dir = os.path.join(project, "target", "failsafe-reports")
+        def fake_run(cmd, **kw):
+            os.makedirs(report_dir, exist_ok=True)
+            with open(os.path.join(report_dir, "TEST-x.xml"), "w") as fh:
+                fh.write(f'<testsuite tests="2" failures="0" errors="0" skipped="{skipped}"></testsuite>')
+            class R: returncode, stdout, stderr = 0, "", "Could not find a valid Docker environment"
+            return R()
+        saved = verify_tools.subprocess.run, verify_tools.docker_status
+        verify_tools.subprocess.run = fake_run
+        verify_tools.docker_status = lambda: {"available": docker_up}
+        try:
+            return verify_tools.run_integration_tests(project)
+        finally:
+            verify_tools.subprocess.run, verify_tools.docker_status = saved
+            shutil.rmtree(project, ignore_errors=True)
+
+    def test_all_skipped_with_docker_up_is_not_ok(self):
+        out = self._run(skipped=2, docker_up=True)
+        self.assertFalse(out["ok"])
+        self.assertIn("Testcontainers may not reach it", out["note"])
+        self.assertIn("Could not find a valid Docker environment", out["output_tail"])
+
+    def test_all_skipped_without_docker_is_not_ok(self):
+        out = self._run(skipped=2, docker_up=False)
+        self.assertFalse(out["ok"])
+        self.assertIn("Docker is not available", out["note"])
+
+    def test_nothing_skipped_is_ok(self):
+        out = self._run(skipped=0, docker_up=True)
+        self.assertTrue(out["ok"])
+        self.assertNotIn("note", out)
+
 class OpenApiTest(unittest.TestCase):
     def test_flags_money_posts_without_header(self):
         res = verify_tools.openapi_idempotency_check(SPEC)

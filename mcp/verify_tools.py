@@ -212,17 +212,23 @@ def run_integration_tests(project_dir, test_pattern=None, java_home=None, timeou
     except subprocess.TimeoutExpired:
         return {"ok": False, "error": f"timed out after {timeout_s}s", "command": " ".join(cmd)}
     totals, failures = _parse_junit_reports(reports)
+    skipped, tests = totals.get("skipped", 0), totals.get("tests", 0)
+    all_skipped = tests > 0 and skipped >= tests  # a run where nothing executed is not a pass
     out = {
-        "ok": res.returncode == 0 and not failures,
+        "ok": res.returncode == 0 and not failures and not all_skipped,
         "command": " ".join(cmd),
         "exit_code": res.returncode,
         "totals": totals,
         "failures": failures,
         "docker_available": docker["available"],
     }
-    if not docker["available"] and totals.get("skipped"):
+    if skipped and not docker["available"]:
         out["note"] = ("Docker is not available, so Testcontainers tests were probably skipped "
                        "(disabledWithoutDocker). Skipped tests prove nothing about rollback or idempotency.")
-    if res.returncode != 0 and not failures:
+    elif skipped:
+        out["note"] = (f"{skipped} of {tests} tests were skipped although the Docker CLI reaches a daemon. "
+                       "Testcontainers may not reach it: look for 'Could not find a valid Docker environment' in "
+                       "output_tail (Docker Engine 29 needs Testcontainers 1.21.4 or later). Skipped tests prove nothing.")
+    if (res.returncode != 0 and not failures) or skipped:
         out["output_tail"] = (res.stdout + res.stderr)[-2000:]
     return out
