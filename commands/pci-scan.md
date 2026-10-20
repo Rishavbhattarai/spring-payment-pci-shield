@@ -1,14 +1,16 @@
 ---
 description: Scan the project (or given paths) for PCI data leaks in logs/toString and unsafe money handling
 argument-hint: "[path ...]"
-allowed-tools: Bash(python3:*), Read, Edit
+allowed-tools: Bash(python3 "${CLAUDE_PLUGIN_ROOT}/scripts/pci_shield.py" --exit-zero:*), Read, Grep, Glob
 ---
 
-Run the pci-shield scanner over the paths in `$ARGUMENTS` (default: the current project):
+## Scan output
 
-```
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/pci_shield.py" $ARGUMENTS
-```
+!`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/pci_shield.py" --exit-zero $ARGUMENTS`
+
+## Your task
+
+The output above is pci-shield's scan of the paths in `$ARGUMENTS` (or the whole project if none were given). If you need to rerun it, use the same command.
 
 Then:
 

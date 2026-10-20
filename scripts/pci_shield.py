@@ -638,4 +638,9 @@ def cli_main(argv):
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    sys.exit(hook_main() if args[:1] == ["--hook"] else cli_main(args))
+    if args[:1] == ["--hook"]:
+        sys.exit(hook_main())
+    # --exit-zero: report only. /pci-scan needs it because Claude Code drops a failed !-command's output.
+    exit_zero = "--exit-zero" in args
+    code = cli_main([a for a in args if a != "--exit-zero"])
+    sys.exit(0 if exit_zero else code)

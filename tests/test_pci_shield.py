@@ -106,6 +106,13 @@ class CliTest(unittest.TestCase):
         self.assertEqual(bad.returncode, 1)
         self.assertEqual(good.returncode, 0, good.stdout)
 
+    def test_exit_zero_reports_but_does_not_fail(self):
+        # /pci-scan runs the scanner as a !-command, and Claude Code drops a failed command's output
+        res = subprocess.run([sys.executable, SCRIPT, "--exit-zero", BAD], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0)
+        self.assertIn("error(s)", res.stdout)
+        self.assertNotIn("pci-shield: 0 error(s)", res.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
